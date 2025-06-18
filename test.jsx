@@ -4,17 +4,18 @@ import BaseUrl from "./baseurl/BaseUrl";
 import axios from "axios";
 import jsonformData from "./json/annexureone.json";
 import moment from "moment";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { ToWords } from "to-words";
-import { Loader2, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 
 const AnnexureOne = () => {
   const containerRef = useRef();
   const toWords = new ToWords();
   const { exhibi_name, exhibi_at, exhibi_from, exhibi_to, exhibi_by } =
     jsonformData;
-  const [loading, setLoading] = useState(false);
+
   const [isPrinting, setIsPrinting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firm_name: "",
     director: "",
@@ -171,21 +172,14 @@ const AnnexureOne = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const hasAnyData = Object.values(formData).some(
-      (value) => typeof value === "string" && value.trim() !== ""
-    );
 
-    if (!hasAnyData) {
-      toast.error("Please fill at least one field before submitting.");
-      return;
-    }
     try {
       setLoading(true);
+      console.log(formData, "entered");
       const response = await axios.post(
         `${BaseUrl}/panel-create-msme`,
         formData
       );
-
       if (response?.data.code == 200) {
         toast.success(response?.data.msg || "Created sucessfully");
       } else {
@@ -193,9 +187,6 @@ const AnnexureOne = () => {
       }
     } catch (error) {
       console.error("❌ Error submitting form:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create try again later"
-      );
     } finally {
       setLoading(false);
     }
@@ -205,57 +196,76 @@ const AnnexureOne = () => {
       <form onSubmit={handleSubmit}>
         <ReactToPrint
           trigger={() => (
-            <button
-              className="fixed top-0 right-0 bg-blue-500 p-2 rounded-bl-xl shadow-lg hover:bg-blue-600"
-              type="button"
-              disabled={isPrinting}
-            >
-              {isPrinting ? (
-                <Loader2 className="animate-spin h-5 w-5" />
-              ) : (
-                <Printer className="h-5 w-5 text-white" />
-              )}
-            </button>
+            <>
+              {/* Large screen button */}
+              <button
+                className="fixed top-5 right-10 hidden lg:flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
+                type="button"
+                disabled={isPrinting}
+              >
+                {isPrinting ? (
+                  <Loader2 className="animate-spin h-5 w-5" />
+                ) : (
+                  "Print"
+                )}
+              </button>
+
+              {/* Small screen icon */}
+              {/* <button
+                className="lg:hidden fixed top-0 right-0 bg-blue-500 p-2 rounded-bl-xl shadow-lg hover:bg-blue-600"
+                type="button"
+                disabled={isPrinting}
+              >
+                {isPrinting ? (
+                  <Loader2 className="animate-spin h-5 w-5 text-white" />
+                ) : (
+                  <Printer className="h-5 w-5 text-white" />
+                )}
+              </button> */}
+            </>
           )}
           content={() => containerRef.current}
+          documentTitle={`Annexure`}
           onBeforeGetContent={() => {
             setIsPrinting(true);
           }}
           onAfterPrint={() => {
             setIsPrinting(false);
           }}
-          documentTitle={`Annexure`}
           pageStyle={`
-          @page {
-              size: auto;
-              margin: 0mm;
-          }
-          @media print {
-              body {
-              //  border: 1px solid #000;
-                  margin: 2mm;
-                   padding: 2mm;
-                
-                   min-height:100vh
-              }
-               .page-break {
-            page-break-before: always;
-        }
-          
-          }
-      `}
+    @page {
+      size: auto;
+      margin: 0mm;
+    }
+    @media print {
+      body {
+        margin: 2mm;
+        padding: 2mm;
+        min-height: 100vh;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+  `}
         />
 
+        {/* Large screen submit button */}
         <button
-          className="fixed top-0 left-0  bg-blue-500 text-white p-2 rounded-br-xl shadow-lg hover:bg-blue-600"
+          className="fixed top-16 right-10 hidden lg:flex bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
           type="submit"
         >
-          {loading ? (
-            <Loader2 className="animate-spin h-5 w-5 text-white" />
-          ) : (
-            "Submit"
-          )}
+          {loading ? "Submiting" : "Submit"}
         </button>
+
+        {/* Small screen submit button */}
+        <button
+          className="lg:hidden fixed top-0 left-0 bg-blue-500 text-white p-2 rounded-br-xl shadow-lg hover:bg-blue-600"
+          type="submit"
+        >
+          {loading ? "Submiting" : "Submit"}
+        </button>
+
         <div ref={containerRef} className="min-h-screen font-normal ">
           {/* ...................................................ANNEXURE -1................................................ */}
 
