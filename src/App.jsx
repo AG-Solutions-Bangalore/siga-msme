@@ -9,7 +9,7 @@ function App() {
         position="top-center"
       
       />
-      {/* <DisableRightClick /> */}
+      <DisableRightClick />
       <AnnexureMain />;
     </div>
   );
