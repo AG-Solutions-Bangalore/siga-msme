@@ -1,21 +1,18 @@
-import React, { useRef, useState } from "react";
+import axios from "axios";
+import { Loader2, Printer } from "lucide-react";
+import moment from "moment";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ReactToPrint from "react-to-print";
 import BaseUrl from "./baseurl/BaseUrl";
-import axios from "axios";
-import jsonformData from "./json/annexureone.json";
-import moment from "moment";
-import { toast } from "react-hot-toast";
-import { ToWords } from "to-words";
-import { Loader2, Printer } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
-const AnnexureOne = () => {
+const AnnexureView = () => {
   const containerRef = useRef();
-  const toWords = new ToWords();
-  const { exhibi_name, exhibi_at, exhibi_from, exhibi_to, exhibi_by } =
-    jsonformData;
-  const [loading, setLoading] = useState(false);
-  const naviagte = useNavigate();
+  const [isPrinting, setIsPrinting] = useState(false);
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firm_name: "",
     director: "",
@@ -43,11 +40,11 @@ const AnnexureOne = () => {
     bank_holder: "",
     amount: "",
     amount_words: "",
-    exhibition_name: exhibi_name,
-    exhibition_at: exhibi_at,
-    exhibition_from: exhibi_from,
-    exhibition_to: exhibi_to,
-    exhibition_by: exhibi_by,
+    exhibition_name: "",
+    exhibition_at: "",
+    exhibition_from: "",
+    exhibition_to: "",
+    exhibition_by: "",
     bank_address: "",
     bank_telephone: "",
     bank_email_id: "",
@@ -77,33 +74,33 @@ const AnnexureOne = () => {
     msme_suggestion: "",
     msme_pic_1: "",
     msme_pic_2: "",
-    checklist_cl_y: "No",
+    checklist_cl_y: "",
     checklist_cl_p: "",
-    checklist_cf_y: "No",
+    checklist_cf_y: "",
     checklist_cf_p: "",
-    checklist_uam_y: "No",
+    checklist_uam_y: "o",
     checklist_uam_p: "",
-    checklist_fd_y: "No",
+    checklist_fd_y: "",
     checklist_fd_p: "",
-    checklist_op_y: "No",
+    checklist_op_y: "",
     checklist_op_p: "",
-    checklist_ob_y: "No",
+    checklist_ob_y: "",
     checklist_ob_p: "",
-    checklist_oc_y: "No",
+    checklist_oc_y: "",
     checklist_oc_p: "",
-    checklist_oi_y: "No",
+    checklist_oi_y: "",
     checklist_oi_p: "",
-    checklist_pfb_y: "No",
+    checklist_pfb_y: "",
     checklist_pfb_p: "",
-    checklist_sccu_y: "No",
+    checklist_sccu_y: "",
     checklist_sccu_p: "",
-    checklist_scca_y: "No",
+    checklist_scca_y: "",
     checklist_scca_p: "",
-    checklist_pan_y: "No",
+    checklist_pan_y: "",
     checklist_pan_p: "",
-    checklist_gst_y: "No",
+    checklist_gst_y: "",
     checklist_gst_p: "",
-    checklist_u_y: "No",
+    checklist_u_y: "",
     checklist_u_p: "",
     category: "",
     type_of_unit: "",
@@ -116,111 +113,81 @@ const AnnexureOne = () => {
     sr_amount: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    let newValue = value;
+  useEffect(() => {
+    const fetchMSMEData = async () => {
+      if (!id) return;
 
-    const numericFields = [
-      "mobile_no",
-      "add1_pincode",
-      "aadhar_card_details",
-      "bank_account_no",
-      "ce_actual",
-      "ce_amount",
-      "sr_actual",
-      "sr_amount",
-    ];
-
-    const checklistPEnds = [
-      "checklist_cl_p",
-      "checklist_cf_p",
-      "checklist_uam_p",
-      "checklist_fd_p",
-      "checklist_op_p",
-      "checklist_ob_p",
-      "checklist_oc_p",
-      "checklist_oi_p",
-      "checklist_pfb_p",
-      "checklist_sccu_p",
-      "checklist_scca_p",
-      "checklist_pan_p",
-      "checklist_gst_p",
-      "checklist_u_p",
-    ];
-
-    if ([...numericFields, ...checklistPEnds].includes(name)) {
-      if (!/^\d*$/.test(value)) return;
-    }
-
-    if (name === "mobile_no" && value.length > 10) return;
-    if (name === "add1_pincode" && value.length > 6) return;
-    if (name === "aadhar_card_details" && value.length > 12) return;
-
-    let updatedForm = {
-      ...formData,
-      [name]: type === "checkbox" ? (checked ? "Yes" : "No") : newValue,
+      try {
+        localStorage.setItem("hasEnter", "true");
+        const response = await axios.get(
+          `${BaseUrl}/web-fetch-msme-by-id/${id}`
+        );
+        if (response?.data) {
+          setFormData((prev) => ({ ...prev, ...response?.data?.msme }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch MSME data:", error);
+      }
     };
 
-    if (name === "amount") {
-      updatedForm.amount_words = toWords.convert(Number(value), {
-        currency: true,
-      });
-    }
+    fetchMSMEData();
+  }, [id]);
 
-    setFormData(updatedForm);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const hasAnyData = Object.values(formData).some(
-      (value) => typeof value === "string" && value.trim() !== ""
-    );
-
-    if (!hasAnyData) {
-      toast.error("Please fill at least one field before submitting.");
-      return;
-    }
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        `${BaseUrl}/panel-create-msme`,
-        formData
-      );
-
-      if (response?.data.code == 200) {
-        toast.success(response?.data.msg || "Created sucessfully");
-        naviagte(`/annexure/${response?.data?.latestid}`);
-      } else {
-        toast.error(response?.data.msg || "Failed to create try again later");
-      }
-    } catch (error) {
-      console.error("❌ Error submitting form:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create try again later"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <button
-          className="fixed top-4 right-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 backdrop-blur-md border border-white/20"
-          type="submit"
-        >
-          {loading ? (
-            <Loader2 className="animate-spin h-5 w-5 text-white" />
-          ) : (
-            "🚀 Submit"
+      <>
+        <ReactToPrint
+          trigger={() => (
+            <button
+              className="fixed top-4 right-4 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 backdrop-blur-md border border-white/20"
+              type="button"
+              disabled={isPrinting}
+            >
+              {isPrinting ? (
+                <Loader2 className="animate-spin h-5 w-5" />
+              ) : (
+                <Printer className="h-5 w-5 text-white" />
+              )}
+            </button>
           )}
-        </button>
+          content={() => containerRef.current}
+          onBeforeGetContent={() => {
+            setIsPrinting(true);
+          }}
+          onAfterPrint={() => {
+            setIsPrinting(false);
+
+            localStorage.setItem("hasPrinted", "true");
+
+            toast.success("Print completed!");
+          }}
+          documentTitle={`Annexure`}
+          pageStyle={`
+          @page {
+              size: auto;
+              margin: 0mm;
+          }
+          @media print {
+              body {
+              //  border: 1px solid #000;
+                  margin: 2mm;
+                   padding: 2mm;
+                
+                   min-height:100vh
+              }
+               .page-break {
+            page-break-before: always;
+        }
+          
+          }
+      `}
+        />
 
         <div ref={containerRef} className="min-h-screen font-normal mt-16">
           {/* ...................................................ANNEXURE -1................................................ */}
 
           <div>
-            <div className="max-w-4xl mt-5 mx-auto px-4">
+            <div className="max-w-4xl mt-5 mx-auto px-4 ">
               <h1 className="text-end text-[11px]  font-bold ">Annexure-I </h1>
               <h1 className="text-center text-[11px]  font-bold ">
                 Details of Agency Creation for PFMS
@@ -249,15 +216,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-center">
                         Name of unit/enterprise
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          name="firm_name"
-                          value={formData?.firm_name || ""}
-                          onChange={handleChange}
-                          autoFocus
-                        />
-                      </td>
+                      <td className="p-2">{formData?.firm_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td
@@ -269,49 +228,21 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         Name of Director(s)/Proprietor/Partner(s)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="director"
-                          value={formData?.director || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.director || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black">Designation</td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="designation"
-                          value={formData?.designation || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.designation || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black">
                         Aadhaar linked Mobile No.
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="mobile_no"
-                          value={formData?.mobile_no || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.mobile_no || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black">E-mail ID</td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="email_id"
-                          value={formData?.email_id || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.email_id || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -321,13 +252,9 @@ const AnnexureOne = () => {
                         Date of Birth (dd/mm/yyyy)
                       </td>
                       <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="dob"
-                          type="date"
-                          value={formData?.dob || ""}
-                          onChange={handleChange}
-                        />
+                        {formData.dob
+                          ? moment(formData.dob).format("DD-MM-YYYY")
+                          : ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -337,14 +264,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Gender (Male/Female/Transgender)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="gender"
-                          value={formData?.gender || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.gender || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -354,12 +274,7 @@ const AnnexureOne = () => {
                         Aadhaar Card Details (Director(s)/Proprietor/Partner)
                       </td>
                       <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="aadhar_card_details"
-                          value={formData?.aadhar_card_details || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.aadhar_card_details || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -368,16 +283,9 @@ const AnnexureOne = () => {
                       </td>
                       <td className="p-2 border-r border-black align-top">
                         UAM/Udyam Registration Certificate (URC) No. &
-                        Registration Date of Unit.
+                        Registration Date of Unit
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="uam"
-                          value={formData?.uam || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.uam || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -387,14 +295,7 @@ const AnnexureOne = () => {
                         GST Number (if any), enclose a copy of certificate
                         issued by an Appropriate Authority
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="gst"
-                          value={formData?.gst || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.gst || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -403,14 +304,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         PAN Number
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="pan"
-                          value={formData?.pan || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.pan || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td
@@ -429,12 +323,7 @@ const AnnexureOne = () => {
                         <span className="mr-2">a)</span> Block No. Building
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_building"
-                          value={formData?.add1_building || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_building || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -443,12 +332,7 @@ const AnnexureOne = () => {
                         premises
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_village"
-                          value={formData?.add1_village || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_village || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -456,38 +340,21 @@ const AnnexureOne = () => {
                         <span className="mr-2">c)</span> Road/Street/Post Office
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_street"
-                          value={formData?.add1_street || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_street || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">d)</span> Area location
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_area"
-                          value={formData?.add1_area || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.add1_area || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">e)</span> District
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_district"
-                          value={formData?.add1_district || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_district || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -495,12 +362,7 @@ const AnnexureOne = () => {
                         <span className="mr-2">f)</span> State
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_state"
-                          value={formData?.add1_state || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_state || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -508,12 +370,7 @@ const AnnexureOne = () => {
                         <span className="mr-2">g)</span> Pin code No.
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="add1_pincode"
-                          value={formData?.add1_pincode || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.add1_pincode || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -532,26 +389,14 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">1)</span> Bank Name
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_name"
-                          value={formData?.bank_name || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">2)</span> Bank Account No.
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_account_no"
-                          value={formData?.bank_account_no || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_account_no || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -559,39 +404,20 @@ const AnnexureOne = () => {
                         <span className="mr-2">3)</span> Name of Bank Branch.
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_branch"
-                          value={formData?.bank_branch || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_branch || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">4)</span> Bank IFSC Code
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_ifsc"
-                          value={formData?.bank_ifsc || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_ifsc || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r  border-black">
                         <span className="mr-2">5)</span> Bank MICR Code
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_micr"
-                          value={formData?.bank_micr || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_micr || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r font-bold border-black">
@@ -599,12 +425,7 @@ const AnnexureOne = () => {
                         holder as per A/C
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full font-bold bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="bank_holder"
-                          value={formData?.bank_holder || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_holder || ""}
                       </td>
                     </tr>
                     <tr>
@@ -661,10 +482,10 @@ const AnnexureOne = () => {
                 <input
                   type="text"
                   className="flex-1 border-b border-dashed border-gray-400 bg-transparent outline-none text-black placeholder-gray-400"
-                  name="amount"
                   value={formData?.amount || ""}
-                  onChange={handleChange}
+                  readOnly
                 />
+
                 <span>Rupees</span>
               </div>
 
@@ -672,10 +493,10 @@ const AnnexureOne = () => {
                 <input
                   type="text"
                   className="flex-1 border-b border-dashed border-gray-400 bg-transparent outline-none text-black placeholder-gray-400"
-                  name="amount_words"
                   value={formData?.amount_words || ""}
-                  onChange={handleChange}
+                  readOnly
                 />
+
                 <span>Only</span>
                 <div className="flex flex-wrap gap-1">
                   <span>from</span>
@@ -739,6 +560,7 @@ const AnnexureOne = () => {
                   value={formData?.exhibition_name || ""}
                   readOnly
                 />
+
                 <span>at</span>
                 <input
                   type="text"
@@ -762,6 +584,7 @@ const AnnexureOne = () => {
                   }
                   readOnly
                 />
+
                 <span>to</span>
                 <input
                   type="text"
@@ -773,6 +596,7 @@ const AnnexureOne = () => {
                   }
                   readOnly
                 />
+
                 <div className="flex flex-wrap gap-4">
                   <span>organized</span>
                   <span>by</span>
@@ -831,13 +655,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-center w-[25%]">
                         Customer’s Name
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.firm_name || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.firm_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r border-black text-center align-top">
@@ -869,13 +687,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-top">
                         Mob/Tel/Fax no
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.mobile_no || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.mobile_no || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r border-black text-center align-top">
@@ -884,13 +696,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-top">
                         Email id
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.email_id || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.email_id || ""}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -912,13 +718,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-center w-[55%]">
                         Bank’s Name
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_name || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r border-black text-center align-top">
@@ -928,11 +728,7 @@ const AnnexureOne = () => {
                         Branch’s Name
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_branch || ""}
-                          readOnly
-                        />
+                        {formData?.bank_branch || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -943,12 +739,7 @@ const AnnexureOne = () => {
                         Branch’s Address
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_address || ""}
-                          name="bank_address"
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_address || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -959,12 +750,7 @@ const AnnexureOne = () => {
                         Branch’s Telephone No.
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_telephone || ""}
-                          name="bank_telephone"
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_telephone || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -975,12 +761,7 @@ const AnnexureOne = () => {
                         Branch’s email id
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_email_id || ""}
-                          name="bank_email_id"
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_email_id || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -991,13 +772,7 @@ const AnnexureOne = () => {
                         9-Digit code number of the Bank & Branch appearing on
                         the MICR cheque issued by the bank
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_micr || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_micr || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r border-black text-center align-top">
@@ -1007,12 +782,7 @@ const AnnexureOne = () => {
                         Account Type (S.B. / Current) With Code 10/11/13
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_account_type || ""}
-                          name="bank_account_type"
-                          onChange={handleChange}
-                        />
+                        {formData?.bank_account_type || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -1023,11 +793,7 @@ const AnnexureOne = () => {
                         Aadhaar Card number: (Linked/Seeded With Account)
                       </td>
                       <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.aadhar_card_details || ""}
-                          readOnly
-                        />
+                        {formData?.aadhar_card_details || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -1037,13 +803,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-top">
                         IFSC code
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_ifsc || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_ifsc || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="px-2 py-1 border-r border-black text-center align-top">
@@ -1052,14 +812,7 @@ const AnnexureOne = () => {
                       <td className="px-2 py-1 border-r border-black align-top">
                         NEFT code
                       </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.bank_neft || ""}
-                          name="bank_neft"
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="px-2 py-1">{formData?.bank_neft || ""}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1087,8 +840,7 @@ const AnnexureOne = () => {
                     <span className="font-bold mb-1 mr-2">Date:</span>
                     <input
                       className="border-b border-dashed border-gray-400 w-40 bg-transparent outline-none text-black placeholder-gray-400"
-                      placeholder="DD/MM/YYYY"
-                      readOnly
+                      placeholder="YYYY/MM/DD"
                     />
                   </div>
 
@@ -1125,20 +877,15 @@ const AnnexureOne = () => {
                 </div>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <span>Aadhaar No</span>
-                  <input
-                    type="text"
-                    className="flex-1 max-w-xs border-b border-dashed border-gray-400 bg-transparent outline-none text-black placeholder-gray-400"
-                    value={formData?.aadhar_card_details}
-                    readOnly
-                  />
+
+                  {formData?.aadhar_card_details}
                 </div>
                 <div className="flex justify-between items-end mt-10 text-[12px]">
                   <div className="flex flex-row ">
                     <span className="font-bold mb-1 mr-2">Date:</span>
                     <input
                       className="border-b border-dashed border-gray-400 w-40 bg-transparent outline-none text-black placeholder-gray-400"
-                      placeholder="DD/MM/YYYY"
-                      readOnly
+                      placeholder="YYYY/MM/DD"
                     />
                   </div>
 
@@ -1185,8 +932,7 @@ const AnnexureOne = () => {
                   type="text"
                   className="flex-1 border-b  border-black bg-transparent outline-none text-black placeholder-gray-400"
                   value={formData?.undertaking_i || ""}
-                  name="undertaking_i"
-                  onChange={handleChange}
+                  readOnly
                 />
                 <span>S/D/o Sh</span>
                 <input
@@ -1205,8 +951,7 @@ const AnnexureOne = () => {
                   type="text"
                   className="flex-1 border-b border-black bg-transparent outline-none text-black placeholder-gray-400"
                   value={formData?.undertaking_ms || ""}
-                  name="undertaking_ms"
-                  onChange={handleChange}
+                  readOnly
                 />
                 <span>bearing Udyam Registration Certificate (URC) No. </span>
               </div>
@@ -1236,8 +981,7 @@ const AnnexureOne = () => {
                   type="text"
                   className="flex-1 border-b border-black bg-transparent outline-none text-black placeholder-gray-400"
                   value={formData?.undertaking_product || ""}
-                  name="undertaking_product"
-                  onChange={handleChange}
+                  readOnly
                 />
                 <span>. Factory address of the </span>
               </div>
@@ -1255,8 +999,7 @@ const AnnexureOne = () => {
                   type="text"
                   className="flex-1 border-b border-black bg-transparent outline-none text-black placeholder-gray-400"
                   value={formData?.undertaking_eligible || ""}
-                  name="undertaking_eligible"
-                  onChange={handleChange}
+                  readOnly
                 />
                 <span>
                   do hereby confirm that the information given by me is correct
@@ -1338,8 +1081,7 @@ const AnnexureOne = () => {
                   type="text"
                   className="flex-1 border-b border-black bg-transparent outline-none text-black placeholder-gray-400"
                   value={formData?.undertaking_stall_no || ""}
-                  name="undertaking_stall_no"
-                  onChange={handleChange}
+                  readOnly
                 />
                 <span>Trade fair/Exhibition at Stall No . </span>
 
@@ -1438,12 +1180,7 @@ const AnnexureOne = () => {
                         Name of the Participating MSE Unit
                       </td>
                       <td className="p-2 w-[45%]">
-                        <input
-                          className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          value={formData?.msme_unit || ""}
-                          name="msme_unit"
-                          onChange={handleChange}
-                        />
+                        {formData?.msme_unit || ""}
                       </td>
                     </tr>
 
@@ -1475,13 +1212,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Name of Proprietor/Partner/ Director
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.firm_name || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.firm_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1490,13 +1221,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Mobile number of Proprietor/Partner/ Director
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.mobile_no || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.mobile_no || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1505,13 +1230,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Email ID of Proprietor/Partner/ Director
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.email_id || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.email_id || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1520,14 +1239,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Website of the participating MSE unit (if Any)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_website"
-                          value={formData?.msme_website || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.msme_website || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1536,13 +1248,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Name, Venue and duration of the Event/Exhibition
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.exhibition_at || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.exhibition_at || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1553,14 +1259,7 @@ const AnnexureOne = () => {
                         participation in the event (About 200 words along with
                         photographs of event)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_comment"
-                          value={formData?.msme_comment || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.msme_comment || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1569,14 +1268,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Number of visitors visited your stall in the event
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_visitor"
-                          value={formData?.msme_visitor || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.msme_visitor || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1586,14 +1278,7 @@ const AnnexureOne = () => {
                         Number and value (in INR) of export inquiries generated
                         in the event.
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_value"
-                          value={formData?.msme_value || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.msme_value || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1604,12 +1289,7 @@ const AnnexureOne = () => {
                         event.
                       </td>
                       <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_orders_booked"
-                          value={formData?.msme_orders_booked || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.msme_orders_booked || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -1620,14 +1300,7 @@ const AnnexureOne = () => {
                         Other achievements such as joint ventures, technology
                         transfer agreement, etc(give details)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_other"
-                          value={formData?.msme_other || ""}
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.msme_other || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -1638,12 +1311,7 @@ const AnnexureOne = () => {
                         Yes, reason for the same.
                       </td>
                       <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_participant"
-                          value={formData?.msme_participant || ""}
-                          onChange={handleChange}
-                        />
+                        {formData?.msme_participant || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -1687,33 +1355,29 @@ const AnnexureOne = () => {
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_1_country"
                                   value={formData?.msme_1_country || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_1_field"
                                   value={formData?.msme_1_field || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_1_description"
                                   value={formData?.msme_1_description || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_1_contact"
                                   value={formData?.msme_1_contact || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                             </tr>
@@ -1721,33 +1385,29 @@ const AnnexureOne = () => {
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_2_country"
                                   value={formData?.msme_2_country || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_2_field"
                                   value={formData?.msme_2_field || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="border-r border-black p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_2_description"
                                   value={formData?.msme_2_description || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                               <td className="p-1">
                                 <input
                                   className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                                  name="msme_2_contact"
                                   value={formData?.msme_2_contact || ""}
-                                  onChange={handleChange}
+                                  readOnly
                                 />
                               </td>
                             </tr>
@@ -1765,9 +1425,8 @@ const AnnexureOne = () => {
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="msme_suggestion"
                           value={formData?.msme_suggestion || ""}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -1912,18 +1571,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_cl_y"
-                          checked={formData.checklist_cl_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_cl_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2 ">
                         <input
                           className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          name="checklist_cl_p"
                           value={formData.checklist_cl_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -1938,18 +1594,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_cf_y"
-                          checked={formData.checklist_cf_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_cf_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_cf_p"
                           value={formData.checklist_cf_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -1964,18 +1617,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_uam_y"
-                          checked={formData.checklist_uam_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_uam_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_uam_p"
                           value={formData.checklist_uam_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -1990,18 +1640,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_fd_y"
-                          checked={formData.checklist_fd_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_fd_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_fd_p"
                           value={formData.checklist_fd_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2016,18 +1663,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_op_y"
-                          checked={formData.checklist_op_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_op_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_op_p"
                           value={formData.checklist_op_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2042,18 +1686,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_ob_y"
-                          checked={formData.checklist_ob_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_ob_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_ob_p"
                           value={formData.checklist_ob_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2068,18 +1709,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_oc_y"
-                          checked={formData.checklist_oc_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_oc_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_oc_p"
                           value={formData.checklist_oc_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2094,18 +1732,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_oi_y"
-                          checked={formData.checklist_oi_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_oi_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_oi_p"
                           value={formData.checklist_oi_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2120,18 +1755,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_pfb_y"
-                          checked={formData.checklist_pfb_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_pfb_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_pfb_p"
                           value={formData.checklist_pfb_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2147,18 +1779,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_sccu_y"
-                          checked={formData.checklist_sccu_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_sccu_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_sccu_p"
                           value={formData.checklist_sccu_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2173,18 +1802,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_scca_y"
-                          checked={formData.checklist_scca_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_scca_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_scca_p"
                           value={formData.checklist_scca_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2198,18 +1824,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_pan_y"
-                          checked={formData.checklist_pan_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_pan_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_pan_p"
                           value={formData.checklist_pan_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2224,18 +1847,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_gst_y"
-                          checked={formData.checklist_gst_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_gst_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_gst_p"
                           value={formData.checklist_gst_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2249,18 +1869,15 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          type="checkbox"
-                          name="checklist_u_y"
-                          checked={formData.checklist_u_y == "Yes"}
-                          onChange={handleChange}
+                          value={formData.checklist_u_y}
+                          readOnly
                         />
                       </td>
                       <td className="p-2">
                         <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          name="checklist_u_p"
                           value={formData.checklist_u_p}
-                          onChange={handleChange}
+                          readOnly
                         />
                       </td>
                     </tr>
@@ -2274,22 +1891,10 @@ const AnnexureOne = () => {
                         Signature of authorized signatory
                         <div>(along with the stamp of the Unit)</div>
                       </div>
-                      <div className="w-full text-left flex">
-                        Name:
-                        {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                      </div>
-                      <div className="w-full text-left flex">
-                        Designation:
-                        {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                      </div>
-                      <div className="w-full text-left flex">
-                        Place:
-                        {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                      </div>
-                      <div className="w-full text-left flex">
-                        Date:
-                        {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                      </div>
+                      <div className="w-full text-left flex">Name: </div>
+                      <div className="w-full text-left flex">Designation: </div>
+                      <div className="w-full text-left flex">Place: </div>
+                      <div className="w-full text-left flex">Date: </div>
                     </div>
                   </div>
                 </div>
@@ -2326,11 +1931,7 @@ const AnnexureOne = () => {
                         Name of Implementing Agency
                       </td>
                       <td className="p-2 w-[50%]">
-                        <input
-                          className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          value={formData?.firm_name || ""}
-                          readOnly
-                        />
+                        {formData?.firm_name || ""}
                       </td>
                     </tr>
 
@@ -2341,13 +1942,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Name of the Applicant Unit
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.firm_name || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.firm_name || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -2379,13 +1974,7 @@ const AnnexureOne = () => {
                         UAM/Udyam Registration Certificate (URC) No. (Pl.
                         Enclose copy)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.uam || ""}
-                          readOnly
-                        />
-                      </td>
+                      <td className="p-2">{formData?.uam || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -2396,14 +1985,7 @@ const AnnexureOne = () => {
                         (General/Women/SC/ST/NER/PH), (Pl. enclose the copy of
                         relevant documents, as applicable)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.category || ""}
-                          name="category"
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.category || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -2412,14 +1994,7 @@ const AnnexureOne = () => {
                       <td className="p-2 border-r border-black align-top">
                         Type of the unit (Micro or Small) (whichever applicable)
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.type_of_unit || ""}
-                          name="type_of_unit"
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.type_of_unit || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
@@ -2429,12 +2004,7 @@ const AnnexureOne = () => {
                         Category of the unit (Manufacturing/Services):
                       </td>
                       <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.category_of_unit || ""}
-                          name="category_of_unit"
-                          onChange={handleChange}
-                        />
+                        {formData?.category_of_unit || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -2445,14 +2015,7 @@ const AnnexureOne = () => {
                         Products manufactured/ Service rendered by applicant
                         unit.
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.product_manuf || ""}
-                          name="product_manuf"
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.product_manuf || ""}</td>
                     </tr>
                     <tr className="border-b border-black">
                       <td
@@ -2495,14 +2058,7 @@ const AnnexureOne = () => {
                         through the event, B2B Knowledge on new technology,
                         opportunity for market expansion etc.
                       </td>
-                      <td className="p-2">
-                        <input
-                          className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
-                          value={formData?.feedback || ""}
-                          name="feedback"
-                          onChange={handleChange}
-                        />
-                      </td>
+                      <td className="p-2">{formData?.feedback || ""}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2551,21 +2107,9 @@ const AnnexureOne = () => {
                           </span>
                         </td>
                         <td className="border-r border-black p-2">
-                          <input
-                            className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                            value={formData?.ce_actual || ""}
-                            name="ce_actual"
-                            onChange={handleChange}
-                          />
+                          {formData?.ce_actual || ""}
                         </td>
-                        <td className="p-1">
-                          <input
-                            className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                            value={formData?.ce_amount || ""}
-                            name="ce_amount"
-                            onChange={handleChange}
-                          />
-                        </td>
+                        <td className="p-1">{formData?.ce_amount || ""}</td>
                       </tr>
                       <tr className="border-b border-black">
                         <td className="border-r border-black p-2">
@@ -2576,36 +2120,18 @@ const AnnexureOne = () => {
                           </span>
                         </td>
                         <td className="border-r border-black p-1">
-                          <input
-                            className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                            value={formData?.sr_actual || ""}
-                            name="sr_actual"
-                            onChange={handleChange}
-                          />
+                          {formData?.sr_actual || ""}
                         </td>
 
-                        <td className="p-2">
-                          <input
-                            className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                            value={formData?.sr_amount || ""}
-                            name="sr_amount"
-                            onChange={handleChange}
-                          />
-                        </td>
+                        <td className="p-2">{formData?.sr_amount || ""}</td>
                       </tr>
                       <tr className="border-b border-black">
                         <td className="border-r border-black p-3" colSpan={2}>
                           <span>Total (in Rs.)</span>
                         </td>
                         <td className="border-r border-black p-2">
-                          <input
-                            className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                            value={
-                              Number(formData?.ce_actual) +
-                                Number(formData?.sr_actual) || ""
-                            }
-                            readOnly
-                          />
+                          {Number(formData?.ce_actual) +
+                            Number(formData?.sr_actual) || ""}
                         </td>
 
                         <td className="p-2">
@@ -2656,22 +2182,12 @@ const AnnexureOne = () => {
                           Signature of authorized signatory
                           <div>(along with the stamp of the Unit)</div>
                         </div>
-                        <div className="w-full text-left flex">
-                          Name:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
+                        <div className="w-full text-left flex">Name: </div>
                         <div className="w-full text-left flex">
                           Designation:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
                         </div>
-                        <div className="w-full text-left flex">
-                          Place:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
-                        <div className="w-full text-left flex">
-                          Date:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
+                        <div className="w-full text-left flex">Place: </div>
+                        <div className="w-full text-left flex">Date: </div>
                       </div>
                     </div>
                   </div>
@@ -2680,9 +2196,9 @@ const AnnexureOne = () => {
             </div>
           </div>
         </div>
-      </form>
+      </>
     </div>
   );
 };
 
-export default AnnexureOne;
+export default AnnexureView;
