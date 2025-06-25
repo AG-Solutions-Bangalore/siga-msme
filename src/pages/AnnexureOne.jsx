@@ -204,7 +204,7 @@ const AnnexureOne = () => {
   };
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} >
         <button
           className="fixed top-4 right-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 backdrop-blur-md border border-white/20"
           type="submit"
@@ -828,7 +828,7 @@ const AnnexureOne = () => {
                       <td className="px-2 border-r border-black text-center align-top w-[5%]">
                         (i)
                       </td>
-                      <td className="px-2 py-1 border-r border-black align-center w-[25%]">
+                      <td className="px-2 py-1 border-r border-black align-center w-[35%]">
                         Customer’s Name
                       </td>
                       <td className="px-2 py-1">
@@ -909,7 +909,7 @@ const AnnexureOne = () => {
                       <td className="px-2 border-r border-black text-center align-top w-[5%]">
                         (i)
                       </td>
-                      <td className="px-2 py-1 border-r border-black align-center w-[55%]">
+                      <td className="px-2 py-1 border-r border-black align-center w-[35%]">
                         Bank’s Name
                       </td>
                       <td className="px-2 py-1">
@@ -1138,8 +1138,6 @@ const AnnexureOne = () => {
                   <span>is</span>
                   <span>linked/seeded</span>
                   <span>with</span>
-                </div>
-                <div className="mt-1 flex flex-wrap gap-2">
                   <span>Aadhaar No</span>
                   <input
                     type="text"
@@ -1148,6 +1146,15 @@ const AnnexureOne = () => {
                     readOnly
                   />
                 </div>
+                {/* <div className="mt-1 flex flex-wrap gap-2">
+                  <span>Aadhaar No</span>
+                  <input
+                    type="text"
+                    className="flex-1 max-w-xs border-b border-dashed border-gray-400 bg-transparent outline-none text-black placeholder-gray-400"
+                    value={formData?.aadhar_card_details}
+                    readOnly
+                  />
+                </div> */}
                 <div className="flex justify-between items-end mt-10 text-[12px]">
                   <div className="flex flex-row ">
                     <span className="font-bold mb-1 mr-2">Date:</span>
@@ -1570,12 +1577,20 @@ const AnnexureOne = () => {
                         photographs of event)
                       </td>
                       <td className="p-2">
-                        <input
+                        {/* <input
                           className="w-full bg-transparent outline-none  text-black placeholder-gray-400"
                           name="msme_comment"
                           value={formData?.msme_comment || ""}
                           onChange={handleChange}
-                        />
+                        /> */}
+                        <textarea
+    className="w-full bg-transparent outline-none text-black placeholder-gray-400 resize-none"
+    name="msme_comment"
+    value={formData?.msme_comment || ""}
+    onChange={handleChange}
+    rows={4} 
+    style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+  />
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -2344,8 +2359,8 @@ const AnnexureOne = () => {
                       <td className="p-2 w-[50%]">
                         <input
                           className="w-full bg-transparent outline-none text-black placeholder-gray-400"
-                          // value={formData?.firm_name || "MSME-DFO-"}
-                          value={ "MSME-DFO-"}
+                          value={`MSME-DFO-` + formData?.add1_district }
+                          // value={ "MSME-DFO-"}
                           readOnly
                         />
                       </td>
@@ -2508,7 +2523,7 @@ const AnnexureOne = () => {
                       </td>
                       <td className="p-2 border-r border-black align-top">
                         <div className="mb-2">Feedback : [about 200 words]</div>
-                        Include details about new business tie-ups achieved
+                        Include details about new business tieups achieved
                         through the event, B2B Knowledge on new technology,
                         opportunity for market expansion etc.
                       </td>
@@ -2523,6 +2538,12 @@ const AnnexureOne = () => {
                     </tr>
                   </tbody>
                 </table>
+                <div className="w-full flex justify-end pt-[60px]">
+                      <div className="flex flex-col items-end gap-2 ">
+                      Page 1 of 2
+                        
+                      </div>
+                    </div>
                 <div className="page-break"></div>
                 <div className="mt-10">
                   <table className="table-auto w-full border border-black text-[10.5px]">
@@ -2693,26 +2714,8 @@ const AnnexureOne = () => {
                     </div>
                     <div className="w-full flex justify-end pt-[60px]">
                       <div className="flex flex-col items-end gap-2 ">
-                        <div className="font-semibold">
-                          Signature of authorized signatory
-                          <div>(along with the stamp of the Unit)</div>
-                        </div>
-                        <div className="w-full text-left flex">
-                          Name:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
-                        <div className="w-full text-left flex">
-                          Designation:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
-                        <div className="w-full text-left flex">
-                          Place:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
-                        <div className="w-full text-left flex">
-                          Date:
-                          {/* <input className="w-full bg-transparent outline-none  text-black placeholder-gray-400" /> */}
-                        </div>
+                      Page 2 of 2
+                        
                       </div>
                     </div>
                   </div>

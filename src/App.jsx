@@ -40,7 +40,7 @@ useEffect(() => {
 
   return (
     <>
-      <DisableRightClick />
+      {/* <DisableRightClick /> */}
       <Toaster position="top-right" />
 
       <Routes>
