@@ -429,14 +429,14 @@ const AnnexureView = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-2 py-1  text-center align-top">
-                        Place
+                    <td className=" px-2 py-1  flex flex-row items-center text-center align-top">
+                        Place <span>  &nbsp;:</span> 
                       </td>
 
                       <td colSpan={2}></td>
                     </tr>
                     <tr>
-                      <td className="text-center align-top">Date : </td>
+                    <td className="text-center align-top">Date&nbsp; : </td>
 
                       <td colSpan={2}></td>
                     </tr>
@@ -461,7 +461,7 @@ const AnnexureView = () => {
           {/* ...................................................SECOND ANNEXURE................................................ */}
           <div>
             <div className="max-w-2xl mt-20 mb-16 mx-auto">
-              <h1 className="text-end text-[11px]  font-bold ">Annexure-II </h1>
+              <h1 className="text-end text-[11px] underline font-bold ">Annexure-II </h1>
 
               <h1 className="text-center text-[12px]  font-bold mb-6">
                 PRE-RECEIPT
@@ -497,7 +497,7 @@ const AnnexureView = () => {
                   readOnly
                 />
 
-                <span>Only</span>
+                {/* <span>Only</span> */}
                 <div className="flex flex-wrap gap-1">
                   <span>from</span>
                   <span>Office</span>
@@ -611,7 +611,7 @@ const AnnexureView = () => {
                 />
               </div>
               <div className="w-full flex flex-col items-end  gap-4 pt-[60px]">
-                <div className="text-red-600 font-bold">
+                <div className="text-green-600 font-bold">
                   Revenue stamp of Rs. 1
                 </div>
                 <div>Signature of authorized signatory</div>
@@ -624,20 +624,20 @@ const AnnexureView = () => {
           </div>
           {/* ...................................................THIRD ANNEXURE................................................ */}
           <div>
-            <div className="max-w-4xl mt-20 mx-auto px-4">
+            <div className="max-w-4xl mt-10 mx-auto px-4">
               <h1 className="text-end text-[11px]  font-bold mb-2 ">
                 Annexure-III
               </h1>
 
               <h1 className="text-center text-[12px] mb-5">
-                ELECTRONIC CLEARING SERVICE (CREDIT CLEARING) MODEL MANDATE FORM
+                ELECTRONIC CLEARING SERVICE (CREDIT CLEARING) MODEL <br/> <span className=" text-lg font-semibold">MANDATE FORM</span>
               </h1>
               <h1 className="text-center text-[12px]">
                 OPTION Form TO RECEIVE PAYMENTS THROUGH CREDIT CLEARING
                 MECHANISM
               </h1>
             </div>
-            <div className="max-w-4xl mx-auto text-[12px] space-y-4 p-4">
+            <div className="max-w-4xl mx-auto text-[12px] space-y-2">
               <div className="overflow-x-auto  p-4">
                 <table className="table-auto w-full border border-black text-[10.5px]">
                   <thead>
@@ -652,7 +652,7 @@ const AnnexureView = () => {
                       <td className="px-2 border-r border-black text-center align-top w-[5%]">
                         (i)
                       </td>
-                      <td className="px-2 py-1 border-r border-black align-center w-[25%]">
+                      <td className="px-2 py-1 border-r border-black align-center w-[35%]">
                         Customer’s Name
                       </td>
                       <td className="px-2 py-1">{formData?.firm_name || ""}</td>
@@ -715,7 +715,7 @@ const AnnexureView = () => {
                       <td className="px-2 border-r border-black text-center align-top w-[5%]">
                         (i)
                       </td>
-                      <td className="px-2 py-1 border-r border-black align-center w-[55%]">
+                      <td className="px-2 py-1 border-r border-black align-center w-[35%]">
                         Bank’s Name
                       </td>
                       <td className="px-2 py-1">{formData?.bank_name || ""}</td>
@@ -783,6 +783,17 @@ const AnnexureView = () => {
                       </td>
                       <td className="px-2 py-1">
                         {formData?.bank_account_type || ""}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="px-2 py-1 border-r border-black text-center align-top">
+                        (viii)
+                      </td>
+                      <td className="px-2 py-1 border-r border-black align-top">
+                        Account No
+                      </td>
+                      <td className="px-2 py-1">
+                      {formData?.bank_account_no || ""}
                       </td>
                     </tr>
                     <tr className="border-b border-black">
@@ -874,12 +885,15 @@ const AnnexureView = () => {
                   <span>is</span>
                   <span>linked/seeded</span>
                   <span>with</span>
+                  <span>Aadhaar No</span>
+
+{formData?.aadhar_card_details}
                 </div>
-                <div className="mt-1 flex flex-wrap gap-2">
+                {/* <div className="mt-1 flex flex-wrap gap-2">
                   <span>Aadhaar No</span>
 
                   {formData?.aadhar_card_details}
-                </div>
+                </div> */}
                 <div className="flex justify-between items-end mt-10 text-[12px]">
                   <div className="flex flex-row ">
                     <span className="font-bold mb-1 mr-2">Date:</span>
@@ -915,7 +929,7 @@ const AnnexureView = () => {
                 (To be submitted on Letter Head of the Unit)
               </h1>
 
-              <h1 className="text-center text-[12px]  font-bold ">
+              <h1 className="text-center text-[12px] underline  font-bold ">
                 UNDERTAKING
               </h1>
               <h1 className="text-center text-[12px]  font-bold ">
@@ -1139,7 +1153,7 @@ const AnnexureView = () => {
               <div className="w-full flex justify-end pt-[60px]">
                 <div className="flex flex-col items-end gap-2 ">
                   <div className="font-semibold">
-                    Signature of authorized signatory
+                    Signature of Authorized Signatory
                   </div>
                   <div>Proprietor / Partner / Director</div>
                   <div>(Along with the office seal of the Unit)</div>
@@ -1157,7 +1171,7 @@ const AnnexureView = () => {
               <h1 className="text-center text-[11px]  font-bold mb-2 ">
                 Annexure-V
               </h1>
-              <h1 className="text-center text-[12px]  font-bold ">
+              <h1 className="text-center text-[12px] underline  font-bold ">
                 PARTICIPANTS FEEDBACK REPORT
               </h1>
               <h1 className="text-center text-[12px]  font-bold ">
@@ -1463,10 +1477,10 @@ const AnnexureView = () => {
           {/* ...................................................ANNEXURE-C ................................................ */}
           <div>
             <div className="max-w-3xl mt-10 mx-auto space-y-3">
-              <h1 className="text-center text-[12px]  font-bold ">
+              <h1 className="text-center text-[12px] underline font-bold ">
                 ANNEXURE-C
               </h1>
-              <h1 className="text-center text-[11px]  font-bold ">
+              <h1 className="text-center text-[11px] underline font-bold ">
                 Check-list for reimbursement of claims under Component 5(A) :
                 PMS Scheme
               </h1>
@@ -1861,7 +1875,7 @@ const AnnexureView = () => {
                     </tr>
                     <tr className="border-b border-black">
                       <td className="p-2 border-r border-black text-center align-top">
-                        iv.
+                        xiv.
                       </td>
                       <td className="p-2 border-r border-black align-top">
                         Undertaking (duly signed and stamped)
@@ -1931,7 +1945,7 @@ const AnnexureView = () => {
                         Name of Implementing Agency
                       </td>
                       <td className="p-2 w-[50%]">
-                        {formData?.firm_name || ""}
+                      {`MSME-DFO-` + formData?.add1_district || "" }
                       </td>
                     </tr>
 
@@ -2054,7 +2068,7 @@ const AnnexureView = () => {
                       </td>
                       <td className="p-2 border-r border-black align-top">
                         <div className="mb-2">Feedback : [about 200 words]</div>
-                        Include details about new business tie-ups achieved
+                        Include details about new business tieups achieved
                         through the event, B2B Knowledge on new technology,
                         opportunity for market expansion etc.
                       </td>
@@ -2062,6 +2076,12 @@ const AnnexureView = () => {
                     </tr>
                   </tbody>
                 </table>
+                <div className="w-full flex justify-end pt-[15rem]">
+                      <div className="flex flex-col items-end gap-2 ">
+                      Page 1 of 2
+                        
+                      </div>
+                    </div>
                 <div className="page-break"></div>
                 <div className="mt-10">
                   <table className="table-auto w-full border border-black text-[10.5px]">
@@ -2188,6 +2208,12 @@ const AnnexureView = () => {
                         </div>
                         <div className="w-full text-left flex">Place: </div>
                         <div className="w-full text-left flex">Date: </div>
+                      </div>
+                    </div>
+                    <div className="w-full  flex justify-end pt-[15rem]">
+                      <div className="flex flex-col items-end gap-2 ">
+                      Page 2 of 2
+                        
                       </div>
                     </div>
                   </div>
